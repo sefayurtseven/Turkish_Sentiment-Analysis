@@ -15,6 +15,7 @@
 import os
 import ReadFile
 import Text_Pre_Processing
+import PlotDrawing
 import pickle
 import json
 
@@ -24,46 +25,52 @@ if __name__ == '__main__':
     dataset_path = dir_name + "\\dataset\\magaza_yorumlari.csv"
     stop_words_path = dir_name + "\\Turkish_Stop_Words.txt"
 
-    # read_csv_file = ReadFile.ReadFile(dataset_path)
-    # stop_words_file = ReadFile.ReadFile(stop_words_path)
-    # text_process = Text_Pre_Processing.TextPreProcessing()
-    #
-    # stop_words_list = stop_words_file.read_txt_file()
-    # stop_words_list = text_process.unique_vowels_change(stop_words_list)
-    #
-    # data_frame = read_csv_file.read_csv_via_pandas()
-    # data_frame['Görüş'] = text_process.lower_case_apply(data_frame['Görüş'])
-    # data_frame['unique_letter_changed_sentence'] = text_process.unique_vowels_change(data_frame['Görüş'])
-    # data_frame['tokenized_sents'] = text_process.tokenize_sentences(data_frame['Görüş'])
-    # data_frame['stop_words_removed'] = text_process.remove_stop_words(data_frame['tokenized_sents'], stop_words_list)
-    # data_frame['stemming_applied'] = text_process.stemming(data_frame['stop_words_removed'])
-    #
-    # # print(data_frame)
-    # with open('filename_dataframe.pkl', 'wb') as outp:
-    #     pickle.dump(data_frame, outp, pickle.HIGHEST_PROTOCOL)
+    read_csv_file = ReadFile.ReadFile(dataset_path)
+    stop_words_file = ReadFile.ReadFile(stop_words_path)
+    text_process = Text_Pre_Processing.TextPreProcessing()
+    plot_drawing = PlotDrawing.PlotDraw()
 
-    with open('filename_dataframe.pkl', 'rb') as inp:
-        data_frame_pkl = pickle.load(inp)
-        print(data_frame_pkl)  # -> banana
-    lamma_dict = {}
-    for lemma_list in data_frame_pkl['stemming_applied']:
-        print(lemma_list)
-        for l in lemma_list:
-            if len(l) >= 1:
-                if lamma_dict.keys().__contains__(l[0][0]):
-                    for lemma in l[0][1]:
-                        if lamma_dict[l[0][0]].keys().__contains__(lemma):
-                            lamma_dict[l[0][0]][lemma] +=1
-                        else:
-                            lamma_dict[l[0][0]][lemma] = 1
-                else:
-                    lamma_dict[l[0][0]] = {}
-                    for lemma in l[0][1]:
-                        lamma_dict[l[0][0]][lemma] = 1
-    with open("lemmatization.json", "w") as outfile:
-        json.dump(lamma_dict, outfile)
+    stop_words_list = stop_words_file.read_txt_file()
 
-print("sefa")
+    data_frame = read_csv_file.read_csv_via_pandas()
+    train_dataset = data_frame[:5000]
+    train_dataset['Görüş'] = text_process.lower_case_apply(train_dataset['Görüş'])
+    train_dataset['Punctuation_Romoved'] = text_process.remove_punctuations(train_dataset['Görüş'])
+    train_dataset['tokenized_sents'] = text_process.tokenize_sentences(train_dataset['Punctuation_Romoved'])
+    train_dataset['stop_words_removed'] = text_process.remove_stop_words(train_dataset['tokenized_sents'], stop_words_list)
+    train_dataset['stemming_applied'] = text_process.sent_lemmatize(train_dataset['stop_words_removed'])
+    word_freq_dict = text_process.get_word_freq_dict(train_dataset['stemming_applied'])
+    for sw in stop_words_list:
+        if word_freq_dict.keys().__contains__(sw):
+            word_freq_dict.pop(sw)
+
+    plot_drawing.DrawBarPlot(word_freq_dict)
+
+    # print(data_frame)
+    with open('filename_train_dataset.pkl', 'wb') as outp:
+        pickle.dump(train_dataset, outp, pickle.HIGHEST_PROTOCOL)
+
+    # with open('filename_dataframe.pkl', 'rb') as inp:
+    #     data_frame_pkl = pickle.load(inp)
+    #     print(data_frame_pkl)  # -> banana
+    # lamma_dict = {}
+    # for lemma_list in data_frame_pkl['stemming_applied']:
+    #     print(lemma_list)
+    #     for l in lemma_list:
+    #         if len(l) >= 1:
+    #             if lamma_dict.keys().__contains__(l[0][0]):
+    #                 for lemma in l[0][1]:
+    #                     if lamma_dict[l[0][0]].keys().__contains__(lemma):
+    #                         lamma_dict[l[0][0]][lemma] +=1
+    #                     else:
+    #                         lamma_dict[l[0][0]][lemma] = 1
+    #             else:
+    #                 lamma_dict[l[0][0]] = {}
+    #                 for lemma in l[0][1]:
+    #                     lamma_dict[l[0][0]][lemma] = 1
+    # with open("lemmatization.json", "w") as outfile:
+    #     json.dump(lamma_dict, outfile)
+
    # print(stop_word_list)
 
 
