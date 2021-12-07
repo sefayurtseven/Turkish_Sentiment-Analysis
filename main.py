@@ -18,7 +18,8 @@ import Text_Pre_Processing
 import PlotDrawing
 import pickle
 import json
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     dir_name = os.path.dirname(__file__)
@@ -52,16 +53,61 @@ if __name__ == '__main__':
 
     with open('filename_train_dataset.pkl', 'rb') as inp:
         data_frame_pkl = pickle.load(inp)
-    word_freq_dict = text_process.get_word_freq_dict(data_frame_pkl['stemming_applied'])
+    # word_freq_dict = text_process.get_word_freq_dict(data_frame_pkl['stemming_applied'])
     count = 0
-    for key in word_freq_dict.keys().__reversed__():
-        if word_freq_dict[key] == 1:
-            count += 1
+    # for key in word_freq_dict.keys().__reversed__():
+    #     if word_freq_dict[key] == 1:
+    #         count += 1
     df_status_negative = data_frame_pkl[data_frame_pkl.Durum == "Olumsuz"]
     df_status_positive = data_frame_pkl[data_frame_pkl.Durum == "Olumlu"]
-    word_freq_dict_positive  = text_process.get_word_freq_dict(df_status_positive['stemming_applied'])
-    word_freq_dict_negative  = text_process.get_word_freq_dict(df_status_negative['stemming_applied'])
+    positive_bigram_list = []
+    negative_bigram_list = []
+    for sent in df_status_positive['stemming_applied']:
+        bigram_list = []
+        if len(sent) > 1:
+            index = 0;
+            while index +1 < len(sent):
+                bigram_list.append([sent[index], sent[index + 1]])
+                index += 1
+        positive_bigram_list.append(bigram_list)
+    for sent in df_status_negative['stemming_applied']:
+        bigram_list = []
+        if len(sent) > 1:
+            index = 0;
+            while index +1 < len(sent):
+                bigram_list.append([sent[index], sent[index + 1]])
+                index += 1
+        negative_bigram_list.append(bigram_list)
+    df_status_positive['bigram_lists'] = positive_bigram_list
+    df_status_negative['bigram_lists'] = negative_bigram_list
+    bigram_freq_dict_p = text_process.get_word_freq_dict(df_status_positive['bigram_lists'])
+    bigram_freq_dict_n = text_process.get_word_freq_dict(df_status_negative['bigram_lists'])
     print()
+    plot_drawing.DrawBarPlot(bigram_freq_dict_n)
+    # word_freq_dict_positive  = text_process.get_word_freq_dict(df_status_positive['stemming_applied'])
+    # word_freq_dict_negative  = text_process.get_word_freq_dict(df_status_negative['stemming_applied'])
+    # plot_drawing.DrawBarPlot(word_freq_dict_negative)
+    # d = {}
+    # d['Positive'] = word_freq_dict_positive['güzel']
+    # d['Negative'] = word_freq_dict_negative['güzel']
+    # # creating the dataset
+    # data = {'C': 20, 'C++': 15, 'Java': 30,
+    #         'Python': 35}
+    # courses = list(d.keys())
+    # values = list(d.values())
+    #
+    # fig = plt.figure(figsize=(4, 3))
+    #
+    # # creating the bar plot
+    # plt.bar(courses, values, color='black',
+    #         width=0.75)
+    #
+    # plt.xlabel("Sentiment")
+    # plt.ylabel("güzel")
+    # plt.title("")
+    # plt.show()
+    print()
+
     # lamma_dict = {}
     # for lemma_list in data_frame_pkl['stemming_applied']:
     #     print(lemma_list)

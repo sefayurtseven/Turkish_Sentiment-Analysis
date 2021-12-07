@@ -9,16 +9,15 @@ class PlotDraw(object):
 
     def DrawBarPlot(self, data_dict):
         data = {}
-        for key in data_dict.keys():
-            if data_dict[key] > 400:
-                data[key] = data_dict[key]
+        for key in list(data_dict.keys())[:10]:
+            data[key] = data_dict[key]
         data_x = list(data.values())
         data_y = list(data.keys())
         x_pos = [i for i, _ in enumerate(data_y)]
         plt.barh(x_pos, data_x, color='black')
-        plt.ylabel("Unique Words Over 400")
-        plt.xlabel("Unique Words Frequency")
-        plt.title("Corpus Unique Words Frequency Over 400 Graph ")
+        plt.ylabel("Negative Bigrams")
+        plt.xlabel("Negative Bigram Frequency")
+        plt.title("Negative Most Frequent 10 Bigrams")
 
         plt.yticks(x_pos, data_y)
 

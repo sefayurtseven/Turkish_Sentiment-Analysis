@@ -65,11 +65,13 @@ class TextPreProcessing(object):
     def get_word_freq_dict(self, sent_lst):
         word_freq_dict = {}
         for s in sent_lst:
+            print(s)
             for w in s:
-                if word_freq_dict.keys().__contains__(w):
-                    word_freq_dict[w] = word_freq_dict[w] + 1
-                else:
-                    word_freq_dict[w] = 1
+                if len(w) >= 1:
+                    if word_freq_dict.keys().__contains__(w[0] + ", " + w[1]):
+                        word_freq_dict[w[0] + ", " + w[1]] = word_freq_dict[w[0] + ", " + w[1]] + 1
+                    else:
+                        word_freq_dict[w[0]+ ", " + w[1]] = 1
 
         word_freq_dict = {k: v for k, v in sorted(word_freq_dict.items(), key=lambda item: item[1])}
         res = OrderedDict(reversed(list(word_freq_dict.items())))
