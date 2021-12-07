@@ -32,27 +32,36 @@ if __name__ == '__main__':
 
     stop_words_list = stop_words_file.read_txt_file()
 
-    data_frame = read_csv_file.read_csv_via_pandas()
-    train_dataset = data_frame[:5000]
-    train_dataset['Görüş'] = text_process.lower_case_apply(train_dataset['Görüş'])
-    train_dataset['Punctuation_Romoved'] = text_process.remove_punctuations(train_dataset['Görüş'])
-    train_dataset['tokenized_sents'] = text_process.tokenize_sentences(train_dataset['Punctuation_Romoved'])
-    train_dataset['stop_words_removed'] = text_process.remove_stop_words(train_dataset['tokenized_sents'], stop_words_list)
-    train_dataset['stemming_applied'] = text_process.sent_lemmatize(train_dataset['stop_words_removed'])
-    word_freq_dict = text_process.get_word_freq_dict(train_dataset['stemming_applied'])
-    for sw in stop_words_list:
-        if word_freq_dict.keys().__contains__(sw):
-            word_freq_dict.pop(sw)
+    # data_frame = read_csv_file.read_csv_via_pandas()
+    # train_dataset = data_frame[:5000]
+    # train_dataset['Görüş'] = text_process.lower_case_apply(train_dataset['Görüş'])
+    # train_dataset['Punctuation_Romoved'] = text_process.remove_punctuations(train_dataset['Görüş'])
+    # train_dataset['tokenized_sents'] = text_process.tokenize_sentences(train_dataset['Punctuation_Romoved'])
+    # train_dataset['stop_words_removed'] = text_process.remove_stop_words(train_dataset['tokenized_sents'], stop_words_list)
+    # train_dataset['stemming_applied'] = text_process.sent_lemmatize(train_dataset['stop_words_removed'])
+    # word_freq_dict = text_process.get_word_freq_dict(train_dataset['stemming_applied'])
+    # for sw in stop_words_list:
+    #     if word_freq_dict.keys().__contains__(sw):
+    #         word_freq_dict.pop(sw)
 
-    plot_drawing.DrawBarPlot(word_freq_dict)
+    # plot_drawing.DrawBarPlot(word_freq_dict)
 
     # print(data_frame)
-    with open('filename_train_dataset.pkl', 'wb') as outp:
-        pickle.dump(train_dataset, outp, pickle.HIGHEST_PROTOCOL)
+    # with open('filename_train_dataset.pkl', 'wb') as outp:
+    #     pickle.dump(train_dataset, outp, pickle.HIGHEST_PROTOCOL)
 
-    # with open('filename_dataframe.pkl', 'rb') as inp:
-    #     data_frame_pkl = pickle.load(inp)
-    #     print(data_frame_pkl)  # -> banana
+    with open('filename_train_dataset.pkl', 'rb') as inp:
+        data_frame_pkl = pickle.load(inp)
+    word_freq_dict = text_process.get_word_freq_dict(data_frame_pkl['stemming_applied'])
+    count = 0
+    for key in word_freq_dict.keys().__reversed__():
+        if word_freq_dict[key] == 1:
+            count += 1
+    df_status_negative = data_frame_pkl[data_frame_pkl.Durum == "Olumsuz"]
+    df_status_positive = data_frame_pkl[data_frame_pkl.Durum == "Olumlu"]
+    word_freq_dict_positive  = text_process.get_word_freq_dict(df_status_positive['stemming_applied'])
+    word_freq_dict_negative  = text_process.get_word_freq_dict(df_status_negative['stemming_applied'])
+    print()
     # lamma_dict = {}
     # for lemma_list in data_frame_pkl['stemming_applied']:
     #     print(lemma_list)
