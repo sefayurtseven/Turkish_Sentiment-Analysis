@@ -57,12 +57,25 @@ class TextPreProcessing(object):
             for token in sent:
                 print(analyzer.lemmatize(token))
                 if len(analyzer.lemmatize(token)) > 0:
-                    lemma_list.append(analyzer.lemmatize(token)[0][1][0])
+                    lemma_list.append(analyzer.lemmatize(token))
             stemming_applied_lst.append(lemma_list)
 
         return stemming_applied_lst
 
     def get_word_freq_dict(self, sent_lst):
+        word_freq_dict = {}
+        for s in sent_lst:
+            for w in s:
+                if word_freq_dict.keys().__contains__(w):
+                    word_freq_dict[w] = word_freq_dict[w] + 1
+                else:
+                    word_freq_dict[w] = 1
+
+        word_freq_dict = {k: v for k, v in sorted(word_freq_dict.items(), key=lambda item: item[1])}
+        res = OrderedDict(reversed(list(word_freq_dict.items())))
+        return res
+
+    def get_word_freq_dict2(self, sent_lst):
         word_freq_dict = {}
         for s in sent_lst:
             print(s)
@@ -76,4 +89,3 @@ class TextPreProcessing(object):
         word_freq_dict = {k: v for k, v in sorted(word_freq_dict.items(), key=lambda item: item[1])}
         res = OrderedDict(reversed(list(word_freq_dict.items())))
         return res
-
