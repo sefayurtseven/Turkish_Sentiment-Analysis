@@ -11,10 +11,17 @@
 # https://medium.com/@paritosh_30025/natural-language-processing-text-data-vectorization-af2520529cf7
 # https://www.analyticsvidhya.com/blog/2021/06/part-5-step-by-step-guide-to-master-nlp-text-vectorization-approaches/
 # https://www.analyticsvidhya.com/blog/2021/06/part-5-step-by-step-guide-to-master-nlp-text-vectorization-approaches/
-
+# https://pythonprogramming.net/naive-bayes-classifier-nltk-tutorial/
 import os
+import token
+import tokenize
 
 import matplotlib
+import nltk
+from nltk.translate import metrics
+from sklearn import naive_bayes
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 import ReadFile
 import Text_Pre_Processing
@@ -24,12 +31,17 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.model_selection import train_test_split
+
+def calculate_BOW(word_set, l_doc):
+    tf_diz = dict.fromkeys(word_set, 0)
+    for word in l_doc:
+        tf_diz[word] = l_doc.count(word)
+    return tf_diz
 
 
 if __name__ == '__main__':
-
     # Initialize
-
     # dir_name = os.path.dirname(__file__)
     # dataset_path = dir_name + "\\dataset\\magaza_yorumlari.csv"
     # stop_words_path = dir_name + "\\Turkish_Stop_Words.txt"
@@ -47,38 +59,100 @@ if __name__ == '__main__':
     # df['Tokenized_Sents'] = text_process.tokenize_sentences(df['Punctuation_Romoved'])
     # df['Stop_Words_Removed'] = text_process.remove_stop_words(df['Tokenized_Sents'], stop_words_list)
     # df['stemming_applied'] = text_process.sent_lemmatize(df['Stop_Words_Removed'])
-
-
-
-    # with open('dataset.pkl', 'wb') as outp:
+    #
+    # with open('dataset_new.pkl', 'wb') as outp:
     #     pickle.dump(df, outp, pickle.HIGHEST_PROTOCOL)
 
-    with open('dataset.pkl', 'rb') as inp:
+    with open('dataset_new.pkl', 'rb') as inp:
         df = pickle.load(inp)
 
-    df_status_negative = pd.DataFrame(df[df.Sentiment == "Olumsuz"]).head(500)
-    df_status_positive = pd.DataFrame(df[df.Sentiment == "Olumlu"]).head(500)
-    df_500 = vertical_stack = pd.concat([df_status_positive, df_status_negative])
+    df_status_negative = pd.DataFrame(df[df.Sentiment == "Olumsuz"]).head(100)
+    df_status_positive = pd.DataFrame(df[df.Sentiment == "Olumlu"]).head(100)
+    df_2000 = pd.concat([df_status_positive, df_status_negative])
+
+
+
+    wordset12 = np.union1d(df_2000['stemming_applied'][0], df_2000['stemming_applied'][1])
+    for sent in df_2000['stemming_applied'][2:]:
+        wordset12 = np.union1d(wordset12, sent)
+
+    # with open('wordset12.pkl', 'wb') as outp:
+    #     pickle.dump(wordset12, outp, pickle.HIGHEST_PROTOCOL)
+    #
+    # # with open('wordset12.pkl', 'rb') as inp:
+    # #     wordset12 = pickle.load(inp)
+    #
+    BOW_list = []
+    i = 0
+    for sent in df_2000['stemming_applied']:
+        print(i)
+        i = i + 1
+        BOW_list.append(calculate_BOW(wordset12, sent))
+    df_bow = pd.DataFrame(BOW_list)
+    df_bow["Sentiment"] = df_2000["Sentiment"]
+    df_bow = df_bow.dropna()
+    #
+    # training_data, testing_data = train_test_split(df_bow, test_size=0.2, random_state=25)
+    # x_train  = training_data[training_data.columns.difference(['Sentiment'])]
+    # y_train = training_data['Sentiment'].values
+    # t = []
+    # for f, b in zip(x_train.to_dict(orient='records'), y_train):
+    #     r = (f, b)
+    #     t.append(r)
+    #
+    # x_val = testing_data[training_data.columns.difference(['Sentiment'])]
+    # y_val = testing_data['Sentiment'].values
+    # v = []
+    # for f, b in zip(x_val.to_dict(orient='records'), y_val):
+    #     r = (f, b)
+    #     v.append(r)
+    # #
+    # # label_encoder = LabelEncoder()
+    # #
+    # # y_train = label_encoder.fit_transform(y_train)
+    # # y_test = label_encoder.fit_transform(y_val)
+    #
+    # classifier = nltk.NaiveBayesClassifier.train(t);
+    # print("Classifier accuracy percent:", (nltk.classify.accuracy(classifier, v)) * 100)
+    # classifier = naive_bayes.MultinomialNB()
+    # classifier.fit(x_train, y_train)
+    #
+    # predictions = classifier.predict(y_val)
+    #
+    # print(metrics.accuracy_score(predictions, y_test))
+
+
+
+
+
+
+
+
 
     print()
-    lamma_dict = {}
-    for lemma_list in df_500['stemming_applied']:
-        print(lemma_list)
-        for l in lemma_list:
-            if len(l) >= 1:
-                if lamma_dict.keys().__contains__(l[0][0]):
-                    for lemma in l[0][1]:
-                        if lamma_dict[l[0][0]].keys().__contains__(lemma):
-                            lamma_dict[l[0][0]][lemma] +=1
-                        else:
-                            lamma_dict[l[0][0]][lemma] = 1
-                else:
-                    lamma_dict[l[0][0]] = {}
-                    for lemma in l[0][1]:
-                        lamma_dict[l[0][0]][lemma] = 1
-    with open("lemmatization_500.json", "w") as outfile:
-        json.dump(lamma_dict, outfile)
 
+    # df_status_negative = pd.DataFrame(df[df.Sentiment == "Olumsuz"]).head(500)
+    # df_status_positive = pd.DataFrame(df[df.Sentiment == "Olumlu"]).head(500)
+    # df_500 = vertical_stack = pd.concat([df_status_positive, df_status_negative])
+    #
+    # print()
+    # lamma_dict = {}
+    # for lemma_list in df_500['stemming_applied']:
+    #     print(lemma_list)
+    #     for l in lemma_list:
+    #         if len(l) >= 1:
+    #             if lamma_dict.keys().__contains__(l[0][0]):
+    #                 for lemma in l[0][1]:
+    #                     if lamma_dict[l[0][0]].keys().__contains__(lemma):
+    #                         lamma_dict[l[0][0]][lemma] +=1
+    #                     else:
+    #                         lamma_dict[l[0][0]][lemma] = 1
+    #             else:
+    #                 lamma_dict[l[0][0]] = {}
+    #                 for lemma in l[0][1]:
+    #                     lamma_dict[l[0][0]][lemma] = 1
+    # with open("lemmatization_500.json", "w") as outfile:
+    #     json.dump(lamma_dict, outfile)
 
     # plot_drawing = PlotDrawing.PlotDraw()
     #
@@ -176,6 +250,4 @@ if __name__ == '__main__':
     # with open("lemmatization.json", "w") as outfile:
     #     json.dump(lamma_dict, outfile)
 
-   # print(stop_word_list)
-
-
+# print(stop_word_list)

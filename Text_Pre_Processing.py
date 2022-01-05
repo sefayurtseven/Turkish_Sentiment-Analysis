@@ -57,7 +57,7 @@ class TextPreProcessing(object):
             for token in sent:
                 print(analyzer.lemmatize(token))
                 if len(analyzer.lemmatize(token)) > 0:
-                    lemma_list.append(analyzer.lemmatize(token))
+                    lemma_list.append(analyzer.lemmatize(token)[0][1][0])
             stemming_applied_lst.append(lemma_list)
 
         return stemming_applied_lst
