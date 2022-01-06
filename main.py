@@ -12,6 +12,8 @@
 # https://www.analyticsvidhya.com/blog/2021/06/part-5-step-by-step-guide-to-master-nlp-text-vectorization-approaches/
 # https://www.analyticsvidhya.com/blog/2021/06/part-5-step-by-step-guide-to-master-nlp-text-vectorization-approaches/
 # https://pythonprogramming.net/naive-bayes-classifier-nltk-tutorial/
+# https://towardsdatascience.com/natural-language-processing-feature-engineering-using-tf-idf-e8b9d00e7e76
+# https://www.andreaperlato.com/mlpost/nlp-step-by-step/
 import os
 import token
 import tokenize
@@ -38,7 +40,34 @@ def calculate_BOW(word_set, l_doc):
     for word in l_doc:
         tf_diz[word] = l_doc.count(word)
     return tf_diz
+def computeTF(wordDict, bagOfWords):
+    tfDict = {}
+    bagOfWordsCount = len(bagOfWords)
+    for word, count in wordDict.items():
+        tfDict[word] = count / float(bagOfWordsCount)
+    return tfDict
 
+def computeIDF(documents):
+    import math
+    N = len(documents)
+    d = []
+    for i in list(documents[0].items()):
+        d.append(i[0])
+    idfDict = dict.fromkeys(d, 0)
+    for document in documents:
+        for word, val in document.items():
+            if val > 0:
+                idfDict[word] += 1
+
+    for word, val in idfDict.items():
+        idfDict[word] = math.log(N / float(val))
+    return idfDict
+
+def computeTFIDF(tfBagOfWords, idfs):
+    tfidf = {}
+    for word, val in tfBagOfWords.items():
+        tfidf[word] = val * idfs[word]
+    return tfidf
 
 if __name__ == '__main__':
     # Initialize
@@ -66,8 +95,8 @@ if __name__ == '__main__':
     with open('dataset_new.pkl', 'rb') as inp:
         df = pickle.load(inp)
 
-    df_status_negative = pd.DataFrame(df[df.Sentiment == "Olumsuz"]).head(100)
-    df_status_positive = pd.DataFrame(df[df.Sentiment == "Olumlu"]).head(100)
+    df_status_negative = pd.DataFrame(df[df.Sentiment == "Olumsuz"]).head(2)
+    df_status_positive = pd.DataFrame(df[df.Sentiment == "Olumlu"]).head(2)
     df_2000 = pd.concat([df_status_positive, df_status_negative])
 
 
@@ -82,15 +111,64 @@ if __name__ == '__main__':
     # # with open('wordset12.pkl', 'rb') as inp:
     # #     wordset12 = pickle.load(inp)
     #
+    # BOW_list = []
+    # i = 0
+    # for sent in df_2000['stemming_applied']:
+    #     print(i)
+    #     i = i + 1
+    #     BOW_list.append(calculate_BOW(wordset12, sent))
+    # df_bow = pd.DataFrame(BOW_list)
+    # df_bow["Sentiment"] = df_2000["Sentiment"]
+    # df_bow = df_bow.dropna()
+    #
+    # bagOfWords = df_bow[df_bow.columns.difference(['Sentiment'])]
     BOW_list = []
     i = 0
     for sent in df_2000['stemming_applied']:
-        print(i)
-        i = i + 1
-        BOW_list.append(calculate_BOW(wordset12, sent))
-    df_bow = pd.DataFrame(BOW_list)
-    df_bow["Sentiment"] = df_2000["Sentiment"]
-    df_bow = df_bow.dropna()
+        BOW_list.append(sent)
+    nw = []
+    for s in BOW_list:
+        numOfWords = dict.fromkeys(wordset12, 0)
+        for w in s:
+            numOfWords[w] += 1
+        nw.append(numOfWords)
+    tf = []
+    for b,n in zip(BOW_list,nw):
+        tf.append(computeTF(n, b))
+    idfs = computeIDF(nw)
+    tfidf = []
+    for tf in tf:
+        tfidf.append(computeTFIDF(tf, idfs))
+
+    df_tfidf = pd.DataFrame(tfidf)
+    df_tfidf['Sentiment'] = df_2000["Sentiment"]
+    training_data, testing_data = train_test_split(df_tfidf, test_size=0.2, random_state=25)
+    x_train = training_data[training_data.columns.difference(['Sentiment'])]
+    y_train = training_data['Sentiment'].values
+    from sklearn.naive_bayes import MultinomialNB
+    from sklearn.preprocessing import StandardScaler
+
+    # sc = StandardScaler()
+    # sc.fit(x_train.values)
+    bad_indices = np.where(np.isinf(x_train.values))
+    print()
+    # from sklearn.feature_extraction.text import CountVectorizer
+    #
+    # count_vector = CountVectorizer()
+    #
+    # # fit_transform() creates dictionary and return term-document matrix.
+    # X_train_counts = count_vector.fit_transform(x_train.data)
+    #
+    # # Import TfidfTransformer class.
+    # # TfidfTransformer transoforms count matrix to tf-idf representation.
+    # from sklearn.feature_extraction.text import TfidfTransformer
+
+    # tfidf_transformer = TfidfTransformer()
+
+    # fit_transform transforms count matrix to tf-idf representation(vector).
+    # X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
+    clf = MultinomialNB().fit(x_train, y_train)
+    print()
     #
     # training_data, testing_data = train_test_split(df_bow, test_size=0.2, random_state=25)
     # x_train  = training_data[training_data.columns.difference(['Sentiment'])]
